@@ -1,28 +1,32 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:task_manager/core/api_constants.dart';
 import '../models/task.dart';
+import '../core/api_constants.dart';
 
 class ApiService {
-  // Use 10.0.2.2 for Android Emulator, 127.0.0.1 for iOS Simulator/Web
-  final String baseUrl = Platform.isAndroid 
-      ? "http://10.0.2.2:8000/api" 
-      : "http://127.0.0.1:8000/api";
+  // Use a getter to dynamically determine the base URL
+  String baseUrl = ApiConstants.baseUrl;
 
   Future<List<Task>> fetchTasks({String? search, String? status}) async {
-    String url = "$baseUrl/tasks/";
-    Map<String, String> params = {};
-    if (search != null && search.isNotEmpty) params['search'] = search;
-    if (status != null && status != 'All') params['status'] = status;
-    
-    final uri = Uri.parse(url).replace(queryParameters: params);
-    final response = await http.get(uri);
+    final queryParams = <String, String>{};
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
+    if (status != null && status != 'All') queryParams['status'] = status;
 
-    if (response.statusCode == 200) {
-      List data = json.decode(response.body);
-      return data.map((item) => Task.fromJson(item)).toList();
-    } else {
+    final uri = Uri.parse(
+      "$baseUrl/api/tasks/",
+    ).replace(queryParameters: queryParams);
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        List data = json.decode(response.body);
+        return data.map((item) => Task.fromJson(item)).toList();
+      }
       throw Exception('Failed to load tasks');
+    } catch (e) {
+      rethrow;
     }
   }
 

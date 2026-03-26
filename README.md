@@ -1,4 +1,4 @@
-# Flodo: Full-Stack Task Management App
+# Full-Stack Task Management App
 
 Flodo is a polished, feature-rich task management application built from the ground up with a **Flutter** frontend and a **Django REST Framework** backend. It showcases a robust, mobile-first architecture, complex relational data modeling, and a smooth, asynchronous user experience.
 

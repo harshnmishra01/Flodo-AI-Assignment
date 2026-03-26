@@ -24,7 +24,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.task?.title ?? "");
-    _descController = TextEditingController(text: widget.task?.description ?? "");
+    _descController = TextEditingController(
+      text: widget.task?.description ?? "",
+    );
 
     // Attach listeners to save drafts instantly on every keystroke
     _titleController.addListener(_saveDraft);
@@ -61,7 +63,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   Future<void> _saveDraft() async {
     // Don't overwrite drafts if we are editing an existing task
     if (widget.task != null) return;
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('draft_title', _titleController.text);
     await prefs.setString('draft_desc', _descController.text);
@@ -77,9 +79,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
     final allTasks = taskProvider.tasks;
-    
+
     // NEW: Use isSaving to manage button state without freezing the UI
-    final isSaving = taskProvider.isSaving; 
+    final isSaving = taskProvider.isSaving;
 
     // Filter out "Done" tasks and the current task itself from the blockers list
     final validBlockers = allTasks
@@ -88,7 +90,15 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.task == null ? "New Task" : "Edit Task"),
+        title: Text(
+          widget.task == null ? "New Task" : "Edit Task",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+            color: Color.fromARGB(255, 233, 229, 229),
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -108,27 +118,40 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: 12),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text("Due Date"),
-                subtitle: Text(
-                  "${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}",
-                  style: const TextStyle(fontSize: 16),
-                ),
-                trailing: const Icon(Icons.calendar_today),
+              // --- DUE DATE ---
+              InkWell(
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
                     initialDate: _selectedDate,
-                    firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                    firstDate: DateTime.now().subtract(
+                      const Duration(days: 365),
+                    ),
                     lastDate: DateTime(2030),
                   );
-                  if (picked != null) setState(() => _selectedDate = picked);
+                  if (picked != null) {
+                    setState(() => _selectedDate = picked);
+                  }
                 },
+                borderRadius: BorderRadius.circular(
+                  12,
+                ), // Matches typical input border radius
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: "Due Date",
+                    suffixIcon: Icon(Icons.calendar_today),
+                  ),
+                  child: Text(
+                    "${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}",
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
               ),
-              const Divider(),
+              const SizedBox(
+                height: 12,
+              ), // Consistent spacing instead of a Divider
               const SizedBox(height: 8),
-              
+
               // --- STATUS DROPDOWN ---
               DropdownButtonFormField<String>(
                 value: _selectedStatus,
@@ -153,7 +176,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
               // A task can only be blocked if it is NOT Done.
               DropdownButtonFormField<int?>(
                 // Use a proper theme-aware style, not a fixed bright patch.
-                value: (_selectedStatus != "Done" && validBlockers.any((t) => t.id == _blockedBy))
+                value:
+                    (_selectedStatus != "Done" &&
+                        validBlockers.any((t) => t.id == _blockedBy))
                     ? _blockedBy
                     : null,
                 decoration: const InputDecoration(
@@ -161,14 +186,17 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                   // Removed explicit fillColor. The theme handles the disabled look.
                 ),
                 items: [
-                  const DropdownMenuItem(value: null, child: Text("None — not blocked")),
+                  const DropdownMenuItem(
+                    value: null,
+                    child: Text("None — not blocked"),
+                  ),
                   ...validBlockers.map(
                     (t) => DropdownMenuItem(value: t.id, child: Text(t.title)),
                   ),
                 ],
                 // NEW LOGIC: Disable completely if the task status is "Done"
                 // This triggers Flutter's native "disabled" style.
-                onChanged: _selectedStatus != "Done" 
+                onChanged: _selectedStatus != "Done"
                     ? (val) => setState(() => _blockedBy = val)
                     : null,
               ),
@@ -179,7 +207,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 height: 50,
                 child: ElevatedButton(
                   // LOCKOUT: If saving, onPressed is null to prevent double tap
-                  onPressed: isSaving ? null : _submit, 
+                  onPressed: isSaving ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).primaryColor,
                     disabledBackgroundColor: Colors.grey[400],
@@ -197,10 +225,19 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                               ),
                             ),
                             SizedBox(width: 12),
-                            Text("Saving...", style: TextStyle(color: Colors.white, fontSize: 16)),
+                            Text(
+                              "Saving...",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
                           ],
                         )
-                      : const Text("Save Task", style: TextStyle(color: Colors.white, fontSize: 16)),
+                      : const Text(
+                          "Save Task",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
                 ),
               ),
             ],
@@ -230,7 +267,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       if (mounted) {
         // Clear the draft only on successful save
         _clearDraft();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
         Navigator.pop(context);
       }
     }

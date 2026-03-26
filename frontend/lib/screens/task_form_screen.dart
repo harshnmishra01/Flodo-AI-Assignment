@@ -16,8 +16,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _descController;
-  DateTime _selectedDate = DateTime.now();
-  String _selectedStatus = "To-Do";
+  late DateTime _selectedDate;
+  late String _selectedStatus;
   int? _blockedBy;
 
   @override
@@ -25,7 +25,14 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     super.initState();
     _titleController = TextEditingController(text: widget.task?.title ?? "");
     _descController = TextEditingController(text: widget.task?.description ?? "");
-    
+
+    // FIX: Initialize date and status from existing task
+    _selectedDate = widget.task?.dueDate ?? DateTime.now();
+    _selectedStatus = widget.task?.status ?? "To-Do";
+
+    // FIX: Initialize _blockedBy from existing task so it shows correctly in the dropdown
+    _blockedBy = widget.task?.blockedBy;
+
     if (widget.task == null) {
       _loadDraft();
     }
@@ -57,10 +64,17 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     final taskProvider = context.watch<TaskProvider>();
     final allTasks = taskProvider.tasks;
 
+    // FIX: Only show tasks that are NOT already "Done" as valid blockers
+    final validBlockers = allTasks
+        .where((t) => t.id != widget.task?.id && t.status != "Done")
+        .toList();
+
     return Stack(
       children: [
         Scaffold(
-          appBar: AppBar(title: Text(widget.task == null ? "New Task" : "Edit Task")),
+          appBar: AppBar(
+            title: Text(widget.task == null ? "New Task" : "Edit Task"),
+          ),
           body: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
@@ -78,19 +92,27 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                     decoration: const InputDecoration(labelText: "Description"),
                     maxLines: 3,
                   ),
+                  // FIX: Show the actual selected date value, not just "Due"
                   ListTile(
-                    title: Text("Due Date: ${_selectedDate.toLocal()}".split(' ')[0]),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text("Due Date"),
+                    subtitle: Text(
+                      "${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}",
+                      style: const TextStyle(fontSize: 16),
+                    ),
                     trailing: const Icon(Icons.calendar_today),
                     onTap: () async {
                       final picked = await showDatePicker(
                         context: context,
                         initialDate: _selectedDate,
-                        firstDate: DateTime.now(),
+                        firstDate: DateTime.now().subtract(const Duration(days: 365)),
                         lastDate: DateTime(2030),
                       );
                       if (picked != null) setState(() => _selectedDate = picked);
                     },
                   ),
+                  const Divider(),
+                  const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     value: _selectedStatus,
                     items: ["To-Do", "In Progress", "Done"]
@@ -99,13 +121,16 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                     onChanged: (val) => setState(() => _selectedStatus = val!),
                     decoration: const InputDecoration(labelText: "Status"),
                   ),
-
+                  const SizedBox(height: 8),
+                  // FIX: Proper label, and only show non-Done tasks as options
                   DropdownButtonFormField<int?>(
-                    value: _blockedBy,
-                    hint: const Text("Blocked By (Optional)"),
+                    value: validBlockers.any((t) => t.id == _blockedBy)
+                        ? _blockedBy
+                        : null,
+                    decoration: const InputDecoration(labelText: "Blocked By (Optional)"),
                     items: [
-                      const DropdownMenuItem(value: null, child: Text("None")),
-                      ...allTasks.where((t) => t.id != widget.task?.id).map(
+                      const DropdownMenuItem(value: null, child: Text("None — not blocked")),
+                      ...validBlockers.map(
                         (t) => DropdownMenuItem(value: t.id, child: Text(t.title)),
                       ),
                     ],
@@ -142,9 +167,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         blockedBy: _blockedBy,
       );
 
-      final msg = widget.task == null 
-        ? await context.read<TaskProvider>().addTask(task)
-        : await context.read<TaskProvider>().updateTask(task);
+      final msg = widget.task == null
+          ? await context.read<TaskProvider>().addTask(task)
+          : await context.read<TaskProvider>().updateTask(task);
 
       if (mounted) {
         _clearDraft();

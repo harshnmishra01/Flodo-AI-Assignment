@@ -86,50 +86,26 @@ class TaskProvider with ChangeNotifier {
     await updateTask(updatedTask);
   }
 
-  // // --- DELETE ---
-  // Future<String> deleteTask(int id) async {
-  //   // 1. Find and save the task in case the API call fails and we need to restore it
-  //   final taskIndex = _tasks.indexWhere((t) => t.id == id);
-  //   if (taskIndex == -1) return "Error: Task not found";
-  //   final taskToRestore = _tasks[taskIndex];
+  // --- DELETE ---
+  Future<String> deleteTask(int id) async {
+    // 1. Find and save the task in case the API call fails and we need to restore it
+    final taskIndex = _tasks.indexWhere((t) => t.id == id);
+    if (taskIndex == -1) return "Error: Task not found";
+    final taskToRestore = _tasks[taskIndex];
 
-  //   // 2. Synchronously remove the task and update the UI IMMEDIATELY
-  //   _tasks.removeAt(taskIndex);
-  //   notifyListeners(); // <-- This instantly updates the tree, fixing the Dismissible error!
+    // 2. Synchronously remove the task and update the UI IMMEDIATELY
+    _tasks.removeAt(taskIndex);
+    notifyListeners(); // <-- This instantly updates the tree, fixing the Dismissible error!
 
-  //   try {
-  //     // 3. Perform the asynchronous API call in the background
-  //     await _apiService.deleteTask(id);
-  //     return "Task deleted successfully";
-  //   } catch (e) {
-  //     // 4. If the API fails, insert the task back into the list at its original spot
-  //     _tasks.insert(taskIndex, taskToRestore);
-  //     notifyListeners(); // Tell the UI the task is back
-  //     return "Error: Could not delete task";
-  //   }
-  // }
-
-  // 1. Instantly removes the task from the screen
-  void removeTaskLocally(int id) {
-    _tasks.removeWhere((t) => t.id == id);
-    notifyListeners();
-  }
-
-  // 2. Puts the task back if the user clicks "Undo"
-  void insertTaskLocally(Task task, int index) {
-    // Ensure we don't insert out of bounds if the list changed
-    final safeIndex = index > _tasks.length ? _tasks.length : index;
-    _tasks.insert(safeIndex, task);
-    notifyListeners();
-  }
-
-  // 3. Actually tells the backend to delete it (called after SnackBar disappears)
-  Future<void> commitDeleteToAPI(int id) async {
     try {
+      // 3. Perform the asynchronous API call in the background
       await _apiService.deleteTask(id);
+      return "Task deleted successfully";
     } catch (e) {
-      // Optional: Handle API failure here (e.g., fetch tasks again to resync)
-      print("Failed to delete from API: $e");
+      // 4. If the API fails, insert the task back into the list at its original spot
+      _tasks.insert(taskIndex, taskToRestore);
+      notifyListeners(); // Tell the UI the task is back
+      return "Error: Could not delete task";
     }
   }
 

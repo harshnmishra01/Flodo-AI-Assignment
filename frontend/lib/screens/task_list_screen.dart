@@ -262,42 +262,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
         );
       },
       onDismissed: (direction) {
-        // 1. Remember where the task was, in case we need to put it back
-        final int taskIndex = taskProvider.tasks.indexOf(task);
-
-        // 2. Remove it from the UI immediately
-        taskProvider.removeTaskLocally(task.id!);
-
-        // 3. Clear existing SnackBars to prevent them from stacking up
-        ScaffoldMessenger.of(context).clearSnackBars();
-
-        // 4. Show the SnackBar with the Undo button
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-              SnackBar(
-                content: const Text("Task deleted"),
-                duration: const Duration(
-                  seconds: 4,
-                ), // Gives them a moment to react
-                action: SnackBarAction(
-                  label: 'UNDO',
-                  textColor: Colors
-                      .blueAccent, // Make it pop against the dark snackbar
-                  onPressed: () {
-                    // User clicked Undo: put it back instantly!
-                    taskProvider.insertTaskLocally(task, taskIndex);
-                  },
-                ),
-              ),
-            )
-            .closed
-            .then((reason) {
-              // 5. If the SnackBar closed naturally (timeout, swiped away)
-              // and NOT because they clicked the Undo action, delete it for real.
-              if (reason != SnackBarClosedReason.action) {
-                taskProvider.commitDeleteToAPI(task.id!);
-              }
-            });
+        taskProvider.deleteTask(task.id!);
       },
       child: Opacity(
         opacity: isBlocked ? 0.5 : 1.0,

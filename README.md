@@ -1,118 +1,102 @@
-# Flodo Task Management App (Full-Stack)
+# Flodo: Full-Stack Task Management App
 
-A functional, visually polished Task Management application built with **Flutter** and **Django REST Framework**. This project demonstrates a robust mobile-first architecture, complex relational data logic ("Blocked By" tasks), and smooth asynchronous UI/UX.
+Flodo is a polished, feature-rich task management application built from the ground up with a **Flutter** frontend and a **Django REST Framework** backend. It showcases a robust, mobile-first architecture, complex relational data modeling, and a smooth, asynchronous user experience.
 
----
-
-## Technical Track & Stretch Goal
-* **Chosen Track:** **Track A: The Full-Stack Builder** (Flutter + Django + PostgreSQL/SQLite).
-* **Stretch Goal:** **Debounced Autocomplete Search**.
-    * Implemented a 300ms debounce to optimize API efficiency and reduce server load.
-    * Developed a custom `HighlightedText` widget to visually emphasize matching search substrings within task titles.
+<p align="center">
+  <em><b>Suggestion:</b> This is the most crucial missing piece. Add a GIF or a few high-quality screenshots of your application in action. Visuals are essential for showcasing a UI-focused project and will dramatically increase engagement.</em>
+</p>
 
 ---
 
-## Features & Requirements Checklist
+## ✨ Key Features
 
-### Core Requirements (Must-Have)
-- [x] **Task CRUD:** Full Create, Read, Update, and Delete functionality.
-- [x] **Relational Logic:** "Blocked By" dependency. Tasks are visually greyed out (0.5 opacity) and interaction is locked if their prerequisite task is not marked as "Done".
-- [x] **Draft Persistence:** Any unsaved text in the creation screen is persisted via `shared_preferences` in real-time, allowing recovery after app restarts or accidental closes.
-- [x] **Search & Filter:** Search by title (Debounced) and filter the list by Status (To-Do, In Progress, Done) using high-fidelity UI chips.
-- [x] **Simulated Latency:** All Create/Update actions include a mandatory **2-second delay** with a non-freezing loading overlay to provide clear feedback and prevent double-submissions.
+*   **Full CRUD Operations:** Create, read, update, and delete tasks with a seamless and intuitive UI.
+*   **Complex Task Dependencies:** Implement "Blocked By" relationships. A task is visually de-emphasized and non-interactive until its prerequisite tasks are completed.
+*   **Debounced Autocomplete Search:** Efficiently search for tasks by title. A 300ms debounce is implemented to optimize API calls, and a custom widget highlights matching text.
+*   **Stateful Filtering:** Filter the task list by status (To-Do, In Progress, Done) using interactive Material 3 filter chips.
+*   **Draft Persistence:** Unsaved new task descriptions are automatically saved to local storage, preventing data loss on accidental app closure.
+*   **Optimistic UI with Undo:** Swipe to delete with an "Undo" option. The delete request is only sent to the server if the user doesn't cancel, saving server resources and improving UX.
+*   **Simulated Latency Handling:** All create/update actions feature a 2-second delay with a non-blocking loading indicator to simulate real-world network conditions and prevent duplicate submissions.
 
-### Technical Highlights
-- [x] **API Documentation:** Integrated `drf-spectacular` to provide a full Swagger/OpenAPI 3.0 UI for backend testing.
-- [x] **State Management:** Utilized `Provider` for reactive UI updates and centralized business logic.
-- [x] **Mobile UX:** Implemented `Dismissible` (Swipe-to-delete) with confirmation dialogs and Material 3 design principles.
+---
 
+## 🛠️ Tech Stack
 
-## Setup Instructions
+| Area         | Technologies & Libraries                                                                                                                              |
+| :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend** | Flutter, Dart, `provider` (State Management), `http`, `shared_preferences`, `intl`, `google_fonts`                                                  |
+| **Backend**  | Python, Django, Django REST Framework, SQLite3 (development) / PostgreSQL (production-ready)                                                        |
+| **API & Docs** | `drf-spectacular` (for OpenAPI 3.0 / Swagger UI)                                                                                                      |
+| **Testing**  | Flutter Widget Tests, Django Unit Tests                                                                                                             |
 
+## 🚀 Getting Started
 
-* Clone the repo
+### Prerequisites
+
+*   **Backend:** Python 3.8+
+*   **Frontend:** Flutter SDK (Stable channel), an IDE (like VS Code or Android Studio), and a target device (Emulator, Physical Device, or Chrome for web).
+
+### Backend Setup
 
 ```bash
-git clone https://github.com/harshnmishra01/Flodo-AI-Assignment.git -b main
-```
+# Clone the repository
+git clone https://github.com/harshnmishra01/Flodo-AI-Assignment.git
+cd Flodo-AI-Assignment/backend
 
-### BE Setup
-
-```bash
-cd backend
-
+# Create and activate a virtual environment
 python -m venv venv
-
-#### On Windows:
-venv\Scripts\activate
-#### On macOS/Linux:
-source venv/bin/activate
+# On Windows: venv\Scripts\activate
+# On macOS/Linux: source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-
+# Run database migrations
 python manage.py makemigrations
 python manage.py migrate
 
-# Create a superuser to be able to check the admin panel
+# Create a superuser for the admin panel
 python manage.py createsuperuser
 
-# Seed the database with sample tasks
+# (Optional) Seed the database with sample data
 python manage.py seed_data
 
 # Run the development server
 python manage.py runserver
 ```
+The backend will be available at `http://127.0.0.1:8000`.
 
-#### Swagger UI
-The Swagger UI is available at `http://127.0.0.1:8000/api/docs/`
+### Frontend Setup
 
-#### Admin Panel
-The admin panel is available at `http://127.0.0.1:8000/admin/`
-
-### FE Setup
-
-#### 1. Prerequisites
-* Flutter SDK (Stable channel)
-* Android Studio / Xcode (for mobile)
-* Chrome (for web debugging)
-
-#### 2. Installation
 ```bash
+# Navigate to the frontend directory
+cd ../frontend
 
-cd frontend
-
-# Install Flutter dependencies
+# Install dependencies
 flutter pub get
 
-# Run on Chrome (Web)
+# Run the application on Chrome
+# (Ensure the backend server is running first)
 flutter run -d chrome
 
-# Run on Mobile Emulator
+# On emulator
 flutter run
 ```
 
-## AI Usage Report
+## 📄 API Documentation
 
-In the development of this project, AI (specifically Google's Gemini) was utilized as a pair-programming assistant to accelerate debugging, refine UI/UX patterns, and optimize state management. 
+The API is fully documented using OpenAPI 3.0. Once the backend server is running, you can access the interactive Swagger UI at:
 
-### How AI was Leveraged:
-* **Debugging Flutter Widget Trees:** Used AI to diagnose and resolve a strict `Dismissible` widget exception ("A dismissed Dismissible widget is still part of the tree"). This led to refactoring the `TaskProvider` to use synchronous, optimistic UI updates rather than waiting for API responses before updating the local state.
-* **UI/UX Refinement:** * Transitioned the date picker from a basic `ListTile` to an `InputDecorator` to maintain strict visual consistency with the app's standard `TextFormField` borders.
-    * Implemented standard, human-readable date formatting using the `intl` package.
-* **Advanced State Logic:** Designed a seamless "Undo" feature for task deletion. AI assisted in structuring the logic to use `ScaffoldMessenger` and `SnackBarClosedReason.action`, ensuring API delete calls are only executed if the user ignores the Undo prompt, thereby saving unnecessary server load.
+**http://127.0.0.1:8000/api/docs/**
 
-### What was Built Manually:
-* The core Django REST Framework architecture, data models, and API endpoints.
-* The baseline Flutter UI layouts, routing, and form validation logic.
-* The relational "Blocked By" dependency logic and the implementation of the debounced search system.
+The Django admin panel is also available at `http://127.0.0.1:8000/admin/`.
 
-### Prompts That Stood Out
-* **Combining Visuals with Code:** Prompting with *"Date filter UI uniformity. Keep it in same borders as the rest of the buttons"* alongside both a screenshot of the mismatched UI and the `TaskFormScreen.dart` file. This provided the exact visual context needed for the AI to recommend `InputDecorator` instead of guessing layout fixes.
-* **Direct Error Pasting:** Providing the raw, unedited exception stack trace (`A dismissed Dismissible widget is still part of the tree`) alongside the relevant `deleteTask` API function. This allowed the AI to immediately identify the async timing conflict between Flutter's widget tree and the backend logic.
-* **Action-Oriented UX Requests:** Prompting *"If we accidentally deleted then while the snackbar is active, can we give a undo button"* shifted the AI from fixing a bug to implementing a standard, mobile-first UX pattern.
+## 🧠 Development Process & AI Collaboration
 
-### Bugs/Issues Caused by AI Misunderstandings
-* **The "Silent Fail" on Optimistic Deletion:** To fix the `Dismissible` crash, the AI initially suggested instantly removing the task from the local UI list *before* calling the backend. However, it didn't account for what would happen if the API call failed (e.g., network error). The frontend would show the task as deleted, but it would still exist in the database, requiring an extra iteration to add a state "rollback" mechanism.
-* **Index Shifting in the Undo Logic:** When generating the Undo feature, the AI suggested re-inserting the deleted task at its original index (`_tasks.insert(index, task)`). The AI failed to account for a scenario where a user rapidly deletes *multiple* tasks in a row. If the list size shrinks faster than the SnackBars close, trying to insert a task at a now non-existent index could cause an out-of-bounds crash. This required adding a `safeIndex` check.
+This project was developed using a pair-programming methodology with AI (Google's Gemini) to accelerate debugging, explore alternative UI patterns, and refine state management logic.
+
+*   **What was built manually:** The core application architecture, Django data models, API endpoints, baseline Flutter UI, and the primary business logic (including "Blocked By" dependencies and debounced search) were designed and implemented by the developer.
+*   **How AI assisted:**
+    *   **Debugging:** Resolved complex widget tree exceptions (e.g., `A dismissed Dismissible widget is still part of the tree`) by identifying async timing conflicts between the UI and backend calls.
+    *   **UI Refinement:** Suggested using `InputDecorator` to achieve visual consistency for the date picker, based on screenshots and code context.
+    *   **UX Enhancements:** Helped structure the "Undo" feature for deletions, moving from a simple delete to a more user-friendly, recoverable action.

@@ -21,9 +21,8 @@ Flodo is a polished, feature-rich task management application built from the gro
 | Area         | Technologies & Libraries                                                                                                                              |
 | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Frontend** | Flutter, Dart, `provider` (State Management), `http`, `shared_preferences`, `intl`, `google_fonts`                                                  |
-| **Backend**  | Python, Django, Django REST Framework, SQLite3 (development) / PostgreSQL (production-ready)                                                        |
+| **Backend**  | Python, Django, Django REST Framework, SQLite3                                                        |
 | **API & Docs** | `drf-spectacular` (for OpenAPI 3.0 / Swagger UI)                                                                                                      |
-| **Testing**  | Flutter Widget Tests, Django Unit Tests                                                                                                             |
 
 ## Getting Started
 

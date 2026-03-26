@@ -5,6 +5,7 @@ import '../providers/task_provider.dart';
 import '../models/task.dart';
 import 'task_form_screen.dart';
 import 'dart:async';
+import 'package:intl/intl.dart';
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -143,7 +144,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                     )
                                   : null,
                               filled: true,
-                              fillColor: const Color.fromARGB(255, 237, 234, 234),
+                              fillColor: const Color.fromARGB(
+                                255,
+                                237,
+                                234,
+                                234,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
@@ -256,10 +262,42 @@ class _TaskListScreenState extends State<TaskListScreen> {
         );
       },
       onDismissed: (direction) {
-        taskProvider.deleteTask(task.id!);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Task deleted")));
+        // 1. Remember where the task was, in case we need to put it back
+        final int taskIndex = taskProvider.tasks.indexOf(task);
+
+        // 2. Remove it from the UI immediately
+        taskProvider.removeTaskLocally(task.id!);
+
+        // 3. Clear existing SnackBars to prevent them from stacking up
+        ScaffoldMessenger.of(context).clearSnackBars();
+
+        // 4. Show the SnackBar with the Undo button
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+              SnackBar(
+                content: const Text("Task deleted"),
+                duration: const Duration(
+                  seconds: 4,
+                ), // Gives them a moment to react
+                action: SnackBarAction(
+                  label: 'UNDO',
+                  textColor: Colors
+                      .blueAccent, // Make it pop against the dark snackbar
+                  onPressed: () {
+                    // User clicked Undo: put it back instantly!
+                    taskProvider.insertTaskLocally(task, taskIndex);
+                  },
+                ),
+              ),
+            )
+            .closed
+            .then((reason) {
+              // 5. If the SnackBar closed naturally (timeout, swiped away)
+              // and NOT because they clicked the Undo action, delete it for real.
+              if (reason != SnackBarClosedReason.action) {
+                taskProvider.commitDeleteToAPI(task.id!);
+              }
+            });
       },
       child: Opacity(
         opacity: isBlocked ? 0.5 : 1.0,
@@ -297,7 +335,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                     _buildStatusChip(task.status),
                     const SizedBox(width: 8),
                     Text(
-                      "Due: ${task.dueDate.day}/${task.dueDate.month}/${task.dueDate.year}",
+                      "Due: ${DateFormat('dd MMM yyyy').format(task.dueDate)}",
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],

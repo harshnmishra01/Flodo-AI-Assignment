@@ -1,17 +1,24 @@
-# task_manager
+# 📱 Frontend: Flutter Application
 
-A new Flutter project.
+```markdown
+# Task Management System - Frontend
 
-## Getting Started
+A Cross-platform **Flutter** application for managing tasks, communicating with a Django REST backend.
 
-This project is a starting point for a Flutter application.
+## 🚀 Getting Started
 
-A few resources to get you started if this is your first Flutter project:
+### 1. Prerequisites
+* Flutter SDK (Stable channel)
+* Android Studio / Xcode (for mobile)
+* Chrome (for web debugging)
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+### 2. Installation
+```bash
+# Install Flutter dependencies
+flutter pub get
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Run on Chrome (Web)
+flutter run -d chrome
+
+# Run on Mobile Emulator
+flutter run

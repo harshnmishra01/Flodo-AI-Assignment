@@ -16,11 +16,14 @@ class TaskListScreen extends StatefulWidget {
 class _TaskListScreenState extends State<TaskListScreen> {
   String _searchQuery = "";
   String _statusFilter = "All";
-  Timer? _debounce; // The magic timer
+  Timer? _debounce;
+  final TextEditingController _searchController = TextEditingController();
+  bool _hasSearchText = false;
 
   @override
   void dispose() {
-    _debounce?.cancel(); // Always cancel timers to prevent memory leaks
+    _debounce?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -60,7 +63,14 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return (blocker != null && blocker.status != "Done");
   }
 
-  // This function handles the debouncing logic
+  // FIX: Returns the blocker task title if the task is actively blocked
+  String? _getBlockerName(Task task, TaskProvider provider) {
+    if (task.blockedBy == null) return null;
+    final blocker = provider.getTaskById(task.blockedBy!);
+    if (blocker != null && blocker.status != "Done") return blocker.title;
+    return null;
+  }
+
   _onSearchChanged(String query, TaskProvider provider) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
@@ -76,18 +86,37 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Flodo Tasks"),
+        title: const Text("Flodo Tasks Dashboard"),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(120),
+          preferredSize: const Size.fromHeight(130),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Column(
               children: [
-                // DEBOUNCED SEARCH BAR
+                // FIX: Search bar with proper text color and clear button
                 TextField(
+                  controller: _searchController,
+                  style: const TextStyle(color: Colors.black87),
                   decoration: InputDecoration(
                     hintText: "Search tasks...",
-                    prefixIcon: const Icon(Icons.search),
+                    hintStyle: const TextStyle(color: Colors.black45),
+                    prefixIcon: const Icon(Icons.search, color: Colors.black45),
+                    suffixIcon: _hasSearchText
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, color: Colors.black45),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = "";
+                                _hasSearchText = false;
+                              });
+                              taskProvider.loadTasks(
+                                search: "",
+                                status: _statusFilter,
+                              );
+                            },
+                          )
+                        : null,
                     filled: true,
                     fillColor: Colors.grey[100],
                     border: OutlineInputBorder(
@@ -95,21 +124,27 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       borderSide: BorderSide.none,
                     ),
                   ),
-                  onChanged: (val) => _onSearchChanged(val, taskProvider),
+                  onChanged: (val) {
+                    setState(() => _hasSearchText = val.isNotEmpty);
+                    _onSearchChanged(val, taskProvider);
+                  },
                 ),
                 const SizedBox(height: 10),
-                // STATUS CHIPS (Alternative to Dropdown for better UI)
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: ["All", "To-Do", "In Progress", "Done"].map((
-                      status,
-                    ) {
+                    children: ["All", "To-Do", "In Progress", "Done"].map((status) {
                       final isSelected = _statusFilter == status;
                       return Padding(
                         padding: const EdgeInsets.only(right: 8.0),
                         child: ChoiceChip(
                           label: Text(status),
+                          labelStyle: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected ? Colors.white : null,
+                          ),
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 6),
                           selected: isSelected,
                           onSelected: (selected) {
                             if (selected) {
@@ -142,18 +177,18 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 itemBuilder: (context, index) {
                   final task = taskProvider.tasks[index];
                   final isBlocked = _checkIfBlocked(task, taskProvider);
+                  // FIX: Get the name of the blocking task
+                  final blockerName = _getBlockerName(task, taskProvider);
 
                   return Dismissible(
                     key: Key(task.id.toString()),
-                    direction:
-                        DismissDirection.endToStart, // Swipe left to delete
+                    direction: DismissDirection.endToStart,
                     background: Container(
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 20),
                       color: Colors.red,
                       child: const Icon(Icons.delete, color: Colors.white),
                     ),
-                    // Confirmation dialog before deleting
                     confirmDismiss: (direction) async {
                       return await showDialog(
                         context: context,
@@ -233,13 +268,35 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                   ),
                                 ],
                               ),
+                              // FIX: Show the blocker's name if this task is blocked
+                              if (blockerName != null) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.lock_outline,
+                                      size: 12,
+                                      color: Colors.redAccent,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        "Blocked by: $blockerName",
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.redAccent,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                           trailing: isBlocked
-                              ? const Icon(
-                                  Icons.lock_outline,
-                                  color: Colors.grey,
-                                )
+                              ? const Icon(Icons.lock_outline, color: Colors.grey)
                               : const Icon(Icons.chevron_right),
                           onTap: isBlocked
                               ? null

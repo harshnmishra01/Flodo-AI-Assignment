@@ -87,83 +87,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Flodo Tasks Dashboard"),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(130),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                // FIX: Search bar with proper text color and clear button
-                TextField(
-                  controller: _searchController,
-                  style: const TextStyle(color: Colors.black87),
-                  decoration: InputDecoration(
-                    hintText: "Search tasks...",
-                    hintStyle: const TextStyle(color: Colors.black45),
-                    prefixIcon: const Icon(Icons.search, color: Colors.black45),
-                    suffixIcon: _hasSearchText
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, color: Colors.black45),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _searchQuery = "";
-                                _hasSearchText = false;
-                              });
-                              taskProvider.loadTasks(
-                                search: "",
-                                status: _statusFilter,
-                              );
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  onChanged: (val) {
-                    setState(() => _hasSearchText = val.isNotEmpty);
-                    _onSearchChanged(val, taskProvider);
-                  },
-                ),
-                const SizedBox(height: 10),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: ["All", "To-Do", "In Progress", "Done"].map((status) {
-                      final isSelected = _statusFilter == status;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: ChoiceChip(
-                          label: Text(status),
-                          labelStyle: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: isSelected ? Colors.white : null,
-                          ),
-                          labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(() => _statusFilter = status);
-                              taskProvider.loadTasks(
-                                search: _searchQuery,
-                                status: status,
-                              );
-                            }
-                          },
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
       body: taskProvider.isLoading && taskProvider.tasks.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -172,148 +95,98 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 search: _searchQuery,
                 status: _statusFilter,
               ),
-              child: ListView.builder(
-                itemCount: taskProvider.tasks.length,
-                itemBuilder: (context, index) {
-                  final task = taskProvider.tasks[index];
-                  final isBlocked = _checkIfBlocked(task, taskProvider);
-                  // FIX: Get the name of the blocking task
-                  final blockerName = _getBlockerName(task, taskProvider);
-
-                  return Dismissible(
-                    key: Key(task.id.toString()),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      color: Colors.red,
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    confirmDismiss: (direction) async {
-                      return await showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text("Delete Task?"),
-                          content: const Text(
-                            "Are you sure you want to remove this task?",
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancel"),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text(
-                                "Delete",
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    onDismissed: (direction) {
-                      taskProvider.deleteTask(task.id!);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Task deleted")),
-                      );
-                    },
-                    child: Opacity(
-                      opacity: isBlocked ? 0.5 : 1.0,
-                      child: Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        elevation: isBlocked ? 0 : 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          title: HighlightedText(
-                            fullText: task.title,
-                            query: _searchQuery,
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              decoration: isBlocked
-                                  ? TextDecoration.lineThrough
+              child: CustomScrollView(
+                slivers: [
+                  // Search bar + filter chips as a sticky header in the body
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Search bar
+                          TextField(
+                            controller: _searchController,
+                            style: const TextStyle(color: Colors.black87),
+                            decoration: InputDecoration(
+                              hintText: "Search tasks...",
+                              hintStyle: const TextStyle(color: Colors.black45),
+                              prefixIcon: const Icon(Icons.search, color: Colors.black45),
+                              suffixIcon: _hasSearchText
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear, color: Colors.black45),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        setState(() {
+                                          _searchQuery = "";
+                                          _hasSearchText = false;
+                                        });
+                                        taskProvider.loadTasks(
+                                          search: "",
+                                          status: _statusFilter,
+                                        );
+                                      },
+                                    )
                                   : null,
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
                             ),
+                            onChanged: (val) {
+                              setState(() => _hasSearchText = val.isNotEmpty);
+                              _onSearchChanged(val, taskProvider);
+                            },
                           ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                task.description,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  _buildStatusChip(task.status),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    "Due: ${task.dueDate.day}/${task.dueDate.month}/${task.dueDate.year}",
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
+                          const SizedBox(height: 12),
+                          // Filter chips — using Wrap so they never get clipped
+                          Wrap(
+                            spacing: 8,
+                            children: ["All", "To-Do", "In Progress", "Done"].map((status) {
+                              final isSelected = _statusFilter == status;
+                              return ChoiceChip(
+                                label: Text(
+                                  status,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: isSelected ? Colors.white : null,
                                   ),
-                                ],
-                              ),
-                              // FIX: Show the blocker's name if this task is blocked
-                              if (blockerName != null) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.lock_outline,
-                                      size: 12,
-                                      color: Colors.redAccent,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        "Blocked by: $blockerName",
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.redAccent,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
                                 ),
-                              ],
-                            ],
-                          ),
-                          trailing: isBlocked
-                              ? const Icon(Icons.lock_outline, color: Colors.grey)
-                              : const Icon(Icons.chevron_right),
-                          onTap: isBlocked
-                              ? null
-                              : () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          TaskFormScreen(task: task),
-                                    ),
-                                  );
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setState(() => _statusFilter = status);
+                                    taskProvider.loadTasks(
+                                      search: _searchQuery,
+                                      status: status,
+                                    );
+                                  }
                                 },
-                        ),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 4),
+                        ],
                       ),
                     ),
-                  );
-                },
+                  ),
+                  // Task list
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final task = taskProvider.tasks[index];
+                        final isBlocked = _checkIfBlocked(task, taskProvider);
+                        final blockerName = _getBlockerName(task, taskProvider);
+                        return _buildTaskCard(
+                          context, task, isBlocked, blockerName, taskProvider);
+                      },
+                      childCount: taskProvider.tasks.length,
+                    ),
+                  ),
+                ],
               ),
             ),
       floatingActionButton: FloatingActionButton(
@@ -325,4 +198,119 @@ class _TaskListScreenState extends State<TaskListScreen> {
       ),
     );
   }
+
+  Widget _buildTaskCard(
+    BuildContext context,
+    Task task,
+    bool isBlocked,
+    String? blockerName,
+    TaskProvider taskProvider,
+  ) {
+    return Dismissible(
+      key: Key(task.id.toString()),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red,
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Delete Task?"),
+            content: const Text("Are you sure you want to remove this task?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Delete", style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (direction) {
+        taskProvider.deleteTask(task.id!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Task deleted")),
+        );
+      },
+      child: Opacity(
+        opacity: isBlocked ? 0.5 : 1.0,
+        child: Card(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          elevation: isBlocked ? 0 : 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            title: HighlightedText(
+              fullText: task.title,
+              query: _searchQuery,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                decoration: isBlocked ? TextDecoration.lineThrough : null,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(task.description, maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    _buildStatusChip(task.status),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Due: ${task.dueDate.day}/${task.dueDate.month}/${task.dueDate.year}",
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                if (blockerName != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.lock_outline, size: 12, color: Colors.redAccent),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          "Blocked by: $blockerName",
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.redAccent,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+            trailing: isBlocked
+                ? const Icon(Icons.lock_outline, color: Colors.grey)
+                : const Icon(Icons.chevron_right),
+            onTap: isBlocked
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TaskFormScreen(task: task),
+                      ),
+                    );
+                  },
+          ),
+        ),
+      ),
+    );
+  }
+
 }

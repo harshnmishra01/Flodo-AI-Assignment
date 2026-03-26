@@ -2,13 +2,9 @@
 
 Flodo is a polished, feature-rich task management application built from the ground up with a **Flutter** frontend and a **Django REST Framework** backend. It showcases a robust, mobile-first architecture, complex relational data modeling, and a smooth, asynchronous user experience.
 
-<p align="center">
-  <em><b>Suggestion:</b> This is the most crucial missing piece. Add a GIF or a few high-quality screenshots of your application in action. Visuals are essential for showcasing a UI-focused project and will dramatically increase engagement.</em>
-</p>
-
 ---
 
-## ✨ Key Features
+## Key Features
 
 *   **Full CRUD Operations:** Create, read, update, and delete tasks with a seamless and intuitive UI.
 *   **Complex Task Dependencies:** Implement "Blocked By" relationships. A task is visually de-emphasized and non-interactive until its prerequisite tasks are completed.
@@ -20,7 +16,7 @@ Flodo is a polished, feature-rich task management application built from the gro
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Area         | Technologies & Libraries                                                                                                                              |
 | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -29,7 +25,7 @@ Flodo is a polished, feature-rich task management application built from the gro
 | **API & Docs** | `drf-spectacular` (for OpenAPI 3.0 / Swagger UI)                                                                                                      |
 | **Testing**  | Flutter Widget Tests, Django Unit Tests                                                                                                             |
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -83,7 +79,7 @@ flutter run -d chrome
 flutter run
 ```
 
-## 📄 API Documentation
+## API Documentation
 
 The API is fully documented using OpenAPI 3.0. Once the backend server is running, you can access the interactive Swagger UI at:
 
@@ -91,7 +87,7 @@ The API is fully documented using OpenAPI 3.0. Once the backend server is runnin
 
 The Django admin panel is also available at `http://127.0.0.1:8000/admin/`.
 
-## 🧠 Development Process & AI Collaboration
+## Development Process & AI Collaboration
 
 This project was developed using a pair-programming methodology with AI (Google's Gemini) to accelerate debugging, explore alternative UI patterns, and refine state management logic.
 

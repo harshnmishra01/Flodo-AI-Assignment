@@ -34,7 +34,7 @@ class ApiService {
     await Future.delayed(const Duration(seconds: 2));
 
     final response = await http.post(
-      Uri.parse("$baseUrl/tasks/"),
+      Uri.parse("$baseUrl/api/tasks/"),
       headers: {"Content-Type": "application/json"},
       body: json.encode(task.toJson()),
     );
@@ -46,7 +46,7 @@ class ApiService {
     await Future.delayed(const Duration(seconds: 2));
 
     final response = await http.put(
-      Uri.parse("$baseUrl/tasks/${task.id}/"),
+      Uri.parse("$baseUrl/api/tasks/${task.id}/"),
       headers: {"Content-Type": "application/json"},
       body: json.encode(task.toJson()),
     );
@@ -54,6 +54,6 @@ class ApiService {
   }
 
   Future<void> deleteTask(int id) async {
-    await http.delete(Uri.parse("$baseUrl/tasks/$id/"));
+    await http.delete(Uri.parse("$baseUrl/api/tasks/$id/"));
   }
 }

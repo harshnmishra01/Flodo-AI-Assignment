@@ -86,7 +86,15 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Flodo Tasks Dashboard"),
+        title: const Text(
+          "Tasks Dashboard",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+            color: Color.fromARGB(255, 233, 229, 229),
+          ),
+        ),
       ),
       body: taskProvider.isLoading && taskProvider.tasks.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -111,10 +119,16 @@ class _TaskListScreenState extends State<TaskListScreen> {
                             decoration: InputDecoration(
                               hintText: "Search tasks...",
                               hintStyle: const TextStyle(color: Colors.black45),
-                              prefixIcon: const Icon(Icons.search, color: Colors.black45),
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: Colors.black45,
+                              ),
                               suffixIcon: _hasSearchText
                                   ? IconButton(
-                                      icon: const Icon(Icons.clear, color: Colors.black45),
+                                      icon: const Icon(
+                                        Icons.clear,
+                                        color: Colors.black45,
+                                      ),
                                       onPressed: () {
                                         _searchController.clear();
                                         setState(() {
@@ -129,7 +143,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                     )
                                   : null,
                               filled: true,
-                              fillColor: Colors.grey[100],
+                              fillColor: const Color.fromARGB(255, 237, 234, 234),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
@@ -144,29 +158,31 @@ class _TaskListScreenState extends State<TaskListScreen> {
                           // Filter chips — using Wrap so they never get clipped
                           Wrap(
                             spacing: 8,
-                            children: ["All", "To-Do", "In Progress", "Done"].map((status) {
-                              final isSelected = _statusFilter == status;
-                              return ChoiceChip(
-                                label: Text(
-                                  status,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: isSelected ? Colors.white : null,
-                                  ),
-                                ),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  if (selected) {
-                                    setState(() => _statusFilter = status);
-                                    taskProvider.loadTasks(
-                                      search: _searchQuery,
-                                      status: status,
-                                    );
-                                  }
-                                },
-                              );
-                            }).toList(),
+                            children: ["All", "To-Do", "In Progress", "Done"]
+                                .map((status) {
+                                  final isSelected = _statusFilter == status;
+                                  return ChoiceChip(
+                                    label: Text(
+                                      status,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: isSelected ? Colors.white : null,
+                                      ),
+                                    ),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      if (selected) {
+                                        setState(() => _statusFilter = status);
+                                        taskProvider.loadTasks(
+                                          search: _searchQuery,
+                                          status: status,
+                                        );
+                                      }
+                                    },
+                                  );
+                                })
+                                .toList(),
                           ),
                           const SizedBox(height: 4),
                         ],
@@ -175,16 +191,18 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   ),
                   // Task list
                   SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final task = taskProvider.tasks[index];
-                        final isBlocked = _checkIfBlocked(task, taskProvider);
-                        final blockerName = _getBlockerName(task, taskProvider);
-                        return _buildTaskCard(
-                          context, task, isBlocked, blockerName, taskProvider);
-                      },
-                      childCount: taskProvider.tasks.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final task = taskProvider.tasks[index];
+                      final isBlocked = _checkIfBlocked(task, taskProvider);
+                      final blockerName = _getBlockerName(task, taskProvider);
+                      return _buildTaskCard(
+                        context,
+                        task,
+                        isBlocked,
+                        blockerName,
+                        taskProvider,
+                      );
+                    }, childCount: taskProvider.tasks.length),
                   ),
                 ],
               ),
@@ -228,7 +246,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                child: const Text(
+                  "Delete",
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
             ],
           ),
@@ -236,18 +257,23 @@ class _TaskListScreenState extends State<TaskListScreen> {
       },
       onDismissed: (direction) {
         taskProvider.deleteTask(task.id!);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Task deleted")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Task deleted")));
       },
       child: Opacity(
         opacity: isBlocked ? 0.5 : 1.0,
         child: Card(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           elevation: isBlocked ? 0 : 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
             title: HighlightedText(
               fullText: task.title,
               query: _searchQuery,
@@ -260,7 +286,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(task.description, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  task.description,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -276,7 +306,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.lock_outline, size: 12, color: Colors.redAccent),
+                      const Icon(
+                        Icons.lock_outline,
+                        size: 12,
+                        color: Colors.redAccent,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -312,5 +346,4 @@ class _TaskListScreenState extends State<TaskListScreen> {
       ),
     );
   }
-
 }
